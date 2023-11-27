@@ -25,7 +25,7 @@ func (r *mysqlRepo) Save(ctx context.Context, a *Author) error {
 	}
 
 	if err := r.db.SaveAuthor(ctx, &authorDAO); err != nil {
-		return err
+		return fmt.Errorf("error saving author: %w", err)
 	}
 
 	a.ID = authorDAO.ID
@@ -39,7 +39,7 @@ func (r *mysqlRepo) GetByID(ctx context.Context, id uint) (*Author, error) {
 		if err == sql.ErrNoRows {
 			return nil, ErrAuthorNotFound
 		}
-		return nil, fmt.Errorf("error getting book: %w", err)
+		return nil, fmt.Errorf("error getting author by ID: %w", err)
 	}
 
 	return &Author{
@@ -52,7 +52,7 @@ func (r *mysqlRepo) GetByID(ctx context.Context, id uint) (*Author, error) {
 func (r *mysqlRepo) GetAll(ctx context.Context) ([]Author, error) {
 	result, err := r.db.GetAuthors(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting authors: %w", err)
 	}
 
 	var authors []Author

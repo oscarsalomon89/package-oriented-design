@@ -41,7 +41,7 @@ func (r *mysqlRepo) GetAll(ctx context.Context) ([]Book, error) {
 
 	booksDAO, err := r.db.GetBooks(ctx)
 	if err != nil {
-		return books, err
+		return books, fmt.Errorf("error getting books: %w", err)
 	}
 
 	for _, b := range booksDAO {
