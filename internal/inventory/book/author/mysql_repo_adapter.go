@@ -4,52 +4,37 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/teamcubation/pod/internal/platform/mysql"
 )
 
-type authorDAO struct {
-	ID        uint
-	Name      string
-	Age       int
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
-}
-
 type mysqlRepo struct {
-	conn *sqlx.DB
+	db *mysql.MySQLDb
 }
 
-func NewMySQLRepo(conn *sqlx.DB) Repository {
+func NewMySQLRepo(conn *mysql.MySQLDb) Repository {
 	return &mysqlRepo{
-		conn: conn,
+		db: conn,
 	}
 }
 
 func (r *mysqlRepo) Save(ctx context.Context, a *Author) error {
-	createdAt := time.Now()
-	result, err := r.conn.Exec(`INSERT INTO authors 
-		(name, age, created_at, updated_at) 
-		VALUES(?,?,?,?)`, a.Name, a.Age, createdAt, createdAt)
+	authorDAO := mysql.AuthorDAO{
+		Name: a.Name,
+		Age:  a.Age,
+	}
 
-	if err != nil {
+	if err := r.db.SaveAuthor(ctx, &authorDAO); err != nil {
 		return err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	a.ID = uint(id)
+	a.ID = authorDAO.ID
 
 	return nil
 }
 
 func (r *mysqlRepo) GetByID(ctx context.Context, id uint) (*Author, error) {
-	author := new(authorDAO)
-	err := r.conn.Get(author, "SELECT * FROM authors WHERE id=?", id)
+	author, err := r.db.GetAuthorByID(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrAuthorNotFound
@@ -65,11 +50,18 @@ func (r *mysqlRepo) GetByID(ctx context.Context, id uint) (*Author, error) {
 }
 
 func (r *mysqlRepo) GetAll(ctx context.Context) ([]Author, error) {
-	var authors []Author
-
-	err := r.conn.Select(&authors, `SELECT * FROM authors`)
+	result, err := r.db.GetAuthors(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	var authors []Author
+	for _, b := range result {
+		authors = append(authors, Author{
+			ID:   b.ID,
+			Name: b.Name,
+			Age:  b.Age,
+		})
 	}
 
 	return authors, nil

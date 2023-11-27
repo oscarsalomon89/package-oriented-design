@@ -21,8 +21,10 @@ func BuildDependencies(env environment.Environment) (*Dependencies, error) {
 		return nil, fmt.Errorf("error connecting to DB: %w", err)
 	}
 
-	bookRepo := book.NewMySQLRepo(mysql.NewMySQLDB(mysqlConn))
-	authorRepo := author.NewMySQLRepo(mysqlConn)
+	conn := mysql.NewMySQLDB(mysqlConn)
+
+	bookRepo := book.NewMySQLRepo(conn)
+	authorRepo := author.NewMySQLRepo(conn)
 	//devRepo := book.NewLocalRepo(mysqlConn)
 
 	return &Dependencies{
