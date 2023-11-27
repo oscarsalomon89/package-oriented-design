@@ -1,8 +1,6 @@
 package app
 
 import (
-	"fmt"
-
 	"github.com/teamcubation/pod/internal/inventory/book"
 	"github.com/teamcubation/pod/internal/inventory/book/author"
 	"github.com/teamcubation/pod/internal/platform/environment"
@@ -15,15 +13,18 @@ type Dependencies struct {
 }
 
 func BuildDependencies(env environment.Environment) (*Dependencies, error) {
-	//localDb := memorydb.New()
 	mysqlConn, err := mysql.GetConnectionDB()
 	if err != nil {
-		return nil, fmt.Errorf("error connecting to DB: %w", err)
+		return nil, err
 	}
 
-	bookRepo := book.NewMySQLRepo(mysql.NewMySQLDB(mysqlConn))
-	authorRepo := author.NewMySQLRepo(mysqlConn)
-	//devRepo := book.NewLocalRepo(mysqlConn)
+	conn, err := mysql.NewMySQLDB(mysqlConn)
+	if err != nil {
+		return nil, err
+	}
+
+	bookRepo := book.NewMySQLRepo(conn)
+	authorRepo := author.NewMySQLRepo(conn)
 
 	return &Dependencies{
 		BookRepository:   bookRepo,

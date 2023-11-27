@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -25,10 +26,13 @@ type MySQLDb struct {
 	conn *sqlx.DB
 }
 
-func NewMySQLDB(conn *sqlx.DB) *MySQLDb {
+func NewMySQLDB(conn *sqlx.DB) (*MySQLDb, error) {
+	if conn == nil {
+		return nil, errors.New("error initializing database")
+	}
 	return &MySQLDb{
 		conn: conn,
-	}
+	}, nil
 }
 
 func (r *MySQLDb) SaveBook(ctx context.Context, b *BookDAO) error {
